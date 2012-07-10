@@ -1,3 +1,5 @@
 
 syntax: regexp
 \.ini$
+syntax: regexp
+^src/connection\.egg-info$
