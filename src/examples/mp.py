@@ -1,5 +1,5 @@
 import os
-from connection.dumb import ConnectionFactory
+from connection import ConnectionFactory
 from multiprocessing import Process, Queue
 
 # Multiprocessing example
