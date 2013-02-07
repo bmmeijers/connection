@@ -32,12 +32,12 @@ class Worker(Process):
         self.conn1 = ConnectionFactory.connection(True)
 
 request_queue = Queue()
-for i in range(3):
+for i in range(2):
     Worker( request_queue ).start()
 
 for data in range(3):
     request_queue.put( data )
 
 # Sentinel objects to allow clean shutdown: 1 per worker.
-for i in range(4):
+for i in range(2):
     request_queue.put( None )
