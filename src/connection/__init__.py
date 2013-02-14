@@ -1,7 +1,7 @@
 # created: 26 jun 2012, MM
 """Helper module for setting up a Database connection to PostgreSQL"""
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Martijn Meijers"
 __license__ = "MIT License"
 
@@ -85,7 +85,7 @@ class Connection(object):
         except:
             pass
 
-    def reopen(self):
+    def reconnect(self):
         self.close()
         self._conn = connect(self._dsn)
     
@@ -119,6 +119,7 @@ class Connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
+        log.debug(sql)
         rows = cursor.fetchall()
         cursor.close()
 #        self._conn.commit()
@@ -142,6 +143,7 @@ class Connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
+        log.debug(sql)
         while True:
             rows = cursor.fetchmany(size)
             if not rows:
@@ -168,9 +170,8 @@ class Connection(object):
         except:
             print sql
             raise
-    
+        log.debug(sql)
         one = cursor.fetchone()
-    
         cursor.close()
 #        self._conn.commit()
     #    CONN.commit()
