@@ -25,18 +25,12 @@ def get_version():
                            "'__version__ =' string not found")
     return version
 
-def emit_warning(warn):
-    print "=-"*40
-    print warn
-    print "=-"*40
-
-
 PACKAGES = find_packages('src')
 EXT_MODULES = []
 SCRIPTS = [] 
 REQUIREMENTS = ["psycopg2",]
 DATA_FILES = [
-    ("connection/config", # folder 
+    ("connection/config", # folder where to install
      ["src/connection/config/default.ini", ] # which files to install there
      ),
 ]
@@ -47,12 +41,13 @@ setup(
     packages = PACKAGES,
     package_dir = {"": "src"},
     author = "Martijn Meijers",
-    author_email ="b.m.meijers@tudelft.nl",
+    author_email = "b.m.meijers@tudelft.nl",
     description = "Small helper class for setting up a database connection to PostgreSQL",
-    url = "http://gdmc.nl/~martijn/",
+    url = "https://bitbucket.org/bmmeijers/connection/",
+    license = "MIT license",
     ext_modules = EXT_MODULES,
-    data_files=DATA_FILES,
-    zip_safe=False,
-    scripts=SCRIPTS,
-    install_requires=REQUIREMENTS,
+    data_files = DATA_FILES,
+    zip_safe = False,
+    scripts = SCRIPTS,
+    install_requires = REQUIREMENTS,
 )
