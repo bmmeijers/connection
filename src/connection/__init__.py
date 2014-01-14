@@ -83,7 +83,7 @@ class ConnectionFactory(object):
         warnings.warn("deprecated, will be removed in the future. use Connection class instead", DeprecationWarning)
         return Connection(dsn(), geo_enabled)
 
-def connection(geo_enabled = True):
+def connection(geo_enabled = False):
     """
     Factory method for new connections
     
