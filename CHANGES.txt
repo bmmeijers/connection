@@ -1,13 +1,10 @@
 Changelog for connection
 ===========================
 
-2.0.2 (unreleased)
------------------
-
-- Nothing changed yet.
-
+2.0.2 (2014-01-14)
+------------------
+- Fixed problem with CHANGES.txt not being picked up (should be in DVCS)
 
 2.0.1 (2014-01-14)
 -----------------
-
 - Testing with zest.releaser [martijn]
