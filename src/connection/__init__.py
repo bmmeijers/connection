@@ -1,9 +1,9 @@
-# created: 26 jun 2012, MM
 """Helper module for setting up a Database connection to PostgreSQL"""
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"
 __author__ = "Martijn Meijers"
 __license__ = "MIT License"
+# created: 26 jun 2012, MM
 
 import logging
 log = logging.getLogger(__name__)
@@ -12,15 +12,27 @@ import os
 from ConfigParser import ConfigParser, NoOptionError
 from psycopg2 import connect
 import psycopg2
+import warnings
 
 def auth_params():
-    config = os.environ.get('DBCONFIG', 'localhost')
+    config = os.environ.get('DBCONFIG', 'default')
     logging.debug("DBCONFIG: {}".format(config))
     path = os.path.dirname(__file__)
     file_nm = os.path.join(path, 
         os.path.join(
-            os.pardir,
             os.path.join("config","{}.ini".format(config))))
+    logging.debug("DBCONFIG from file: {}".format(file_nm))
+    
+    # FIXME:
+    # would it not be better to put config file in users home dir?
+    #http://stackoverflow.com/questions/7567642/where-to-put-a-configuration-file-in-python
+    # config= None
+    # for loc in os.curdir, os.path.expanduser("~"), "/etc/myproject", os.environ.get("MYPROJECT_CONF"):
+    #     try: 
+    #         with open(os.path.join(loc,"myproject.conf")) as source:
+    #             config.readfp( source )
+    #     except IOError:
+    #         pass
     configparser = ConfigParser()
     configparser.read(file_nm)
     try:
@@ -46,7 +58,7 @@ def dsn():
     # port - connection port number (defaults to 5432 if not provided)
     # sslmode - SSL TCP/IP negotiation mode
     auth = auth_params()
-    dsn = "dbname={} user={} password={} host={} port={} sslmode={}"
+    dsn = "host={} dbname={} user={} password={} port={} sslmode={}"
     logging.debug("Connection for: {}".format(
         dsn.format(
             auth['database'],
@@ -55,11 +67,10 @@ def dsn():
             auth['host'],
             auth['port'],
             auth['sslmode'],)))
-    return dsn.format(
+    return dsn.format(auth['host'],
         auth['database'],
         auth['username'],
         auth['password'],
-        auth['host'],
         auth['port'],
         auth['sslmode'],)
 
@@ -69,8 +80,21 @@ class ConnectionFactory(object):
         pass
     @classmethod
     def connection(cls, geo_enabled = True):
+        warnings.warn("deprecated, will be removed in the future. use Connection class instead", DeprecationWarning)
         return Connection(dsn(), geo_enabled)
 
+def connection(geo_enabled = True):
+    """
+    Factory method for new connections
+    
+    This is the preferred way of making new connections:
+    
+    >>> from connection import connection
+    >>> conn = connection(geo_enabled = True)
+    
+    """
+    return Connection.connection(geo_enabled)
+    
 class Connection(object):
     def __init__(self, dsn, geo_enabled = False):
         self._dsn = dsn
@@ -79,6 +103,10 @@ class Connection(object):
         if geo_enabled:
             self._register()
     
+    @classmethod
+    def connection(cls, geo_enabled = True):
+        return cls(dsn(), geo_enabled)
+        
     def close(self):
         try:
             self._conn.close()
@@ -178,12 +206,12 @@ class Connection(object):
         del cursor
         return one
     
-    def execute(self, sql, parameters = None):
+    def execute(self, sql, parameters = None, isolation_level = 1):
         # takes care of having to write boiler plate code for cursors and
         # opening database connections
         #
         # might not be very efficient, but leads to a bit more readable code
-#        self._conn.set_isolation_level(1)
+        self._conn.set_isolation_level(isolation_level)
         cursor = self._conn.cursor()
         try:
             log.debug(sql)
@@ -195,4 +223,5 @@ class Connection(object):
             raise
         cursor.close()
         self._conn.commit()
+        self._conn.set_isolation_level(1)
         del cursor

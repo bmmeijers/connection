@@ -1,5 +1,22 @@
 
 syntax: regexp
-\.ini$
+^src/connection\.egg-info$
+
+syntax: regexp
+^src/connection/config/bag\.ini$
+syntax: regexp
+^src/connection/config/casagrande_pg8\.ini$
+syntax: regexp
+^src/connection/config/casagrande\.ini$
+syntax: regexp
+^src/connection/config/localhost\.ini$
+syntax: regexp
+^src/connection/config/pgpool\.ini$
+syntax: regexp
+^src/connection/config/top10\.ini$
+syntax: regexp
+^build$
+syntax: regexp
+^dist$
 syntax: regexp
 ^src/connection\.egg-info$
