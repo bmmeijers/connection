@@ -5,9 +5,9 @@ logging.basicConfig(
     stream=sys.stdout, 
     level=logging.DEBUG)
 
-from connection import Connection
+from connection import connection
 
-conn = Connection.connection()
+conn = connection()
 
 sql = "SELECT postgis_full_version()"
 for item, in conn.recordset(sql): 
