@@ -1,6 +1,6 @@
 """Helper module for setting up a Database connection to PostgreSQL"""
 
-__version__ = '2.0.3.dev0'
+__version__ = '2.0.3.dev1'
 __author__ = "Martijn Meijers"
 __license__ = "MIT License"
 # created: 26 jun 2012, MM
@@ -224,4 +224,18 @@ class Connection(object):
         cursor.close()
         self._conn.commit()
         self._conn.set_isolation_level(1)
+        del cursor
+
+
+    def copy_from(self, file_nm, table, sep=None, null=None, size=None, columns=None):
+        cursor = self._conn.cursor()
+        try:
+            if columns:
+                cursor.copy_from(file_nm, table, columns=columns)
+            else:
+                cursor.copy_from(file_nm, table)
+        except:
+            raise
+        cursor.close()
+        self._conn.commit()
         del cursor
