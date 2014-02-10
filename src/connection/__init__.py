@@ -227,13 +227,13 @@ class Connection(object):
         del cursor
 
 
-    def copy_from(self, file_nm, table, sep=None, null=None, size=None, columns=None):
+    def copy_from(self, file_nm, table, sep="\t", null="\\N", size=8192, columns=None):
         cursor = self._conn.cursor()
         try:
             if columns:
-                cursor.copy_from(file_nm, table, columns=columns)
+                cursor.copy_from(file_nm, table, sep, null, size, columns=columns)
             else:
-                cursor.copy_from(file_nm, table)
+                cursor.copy_from(file_nm, table, sep, null, size)
         except:
             raise
         cursor.close()
