@@ -16,12 +16,12 @@ import warnings
 
 def auth_params():
     config = os.environ.get('DBCONFIG', 'default')
-    logging.debug("DBCONFIG: {}".format(config))
+    logging.debug("DBCONFIG: {0}".format(config))
     path = os.path.dirname(__file__)
     file_nm = os.path.join(path, 
         os.path.join(
-            os.path.join("config","{}.ini".format(config))))
-    logging.debug("DBCONFIG from file: {}".format(file_nm))
+            os.path.join("config","{0}.ini".format(config))))
+    logging.debug("DBCONFIG from file: {0}".format(file_nm))
     
     # FIXME:
     # would it not be better to put config file in users home dir?
@@ -58,8 +58,8 @@ def dsn():
     # port - connection port number (defaults to 5432 if not provided)
     # sslmode - SSL TCP/IP negotiation mode
     auth = auth_params()
-    dsn = "host={} dbname={} user={} password={} port={} sslmode={}"
-    logging.debug("Connection for: {}".format(
+    dsn = "host={0} dbname={1} user={2} password={3} port={4} sslmode={5}"
+    logging.debug("Connection for: {0}".format(
         dsn.format(
             auth['database'],
             auth['username'],
@@ -132,7 +132,7 @@ class Connection(object):
         cursor.execute("SELECT NULL::geometry")
         geom_oid = cursor.description[0][1]
         cursor.close()
-        log.debug("Registering Geometry Type (OID {}) for PostGIS".format(geom_oid))
+        log.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
         GEOMETRY = psycopg2.extensions.new_type((geom_oid, ), "GEOMETRY", loads)
         psycopg2.extensions.register_type(GEOMETRY)
 
