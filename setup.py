@@ -50,4 +50,15 @@ setup(
     zip_safe = False,
     scripts = SCRIPTS,
     install_requires = REQUIREMENTS,
+    classifiers = [
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Information Technology",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )
