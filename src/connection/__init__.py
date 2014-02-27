@@ -103,6 +103,9 @@ class Connection(object):
         if geo_enabled:
             self._register()
     
+    def __del__(self):
+        self.close()
+    
     @classmethod
     def connection(cls, geo_enabled = True):
         return cls(dsn(), geo_enabled)
