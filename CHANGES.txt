@@ -4,7 +4,7 @@ Changelog for connection
 2.0.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Close connection when Connection object is __del__()'ed.
 
 
 2.0.2 (2014-01-14)
