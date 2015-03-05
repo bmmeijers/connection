@@ -4,7 +4,7 @@ Changelog for connection
 2.0.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added ConnectionManager for use with `with` statement.
 
 
 2.0.3 (2014-06-11)

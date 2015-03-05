@@ -94,7 +94,38 @@ def connection(geo_enabled = False):
     
     """
     return Connection.connection(geo_enabled)
+
+
+def open_db(geo_enabled = True):
+    """
+    Factory method for new connection manager for use in with statement
     
+    This is the preferred way of making new connections:
+    
+    >>> from connection import db
+    >>> with open_db() as db:
+    ...     db.execute("select 1")
+    
+    """
+    return ConnectionManager(geo_enabled)
+
+
+class ConnectionManager(object):
+    ''' Context manager for Postgres connections.
+    See http://www.python.org/dev/peps/pep-0343/
+    and http://effbot.org/zone/python-with-statement.htm
+    '''
+    def __init__(self, geo_enabled=True):
+        self.geo_enabled = geo_enabled
+
+    def __enter__(self):
+        self.db = Connection.connection(self.geo_enabled)
+        return self.db
+
+    def __exit__(self, type, value, traceback):
+        self.db.close()
+
+
 class Connection(object):
     def __init__(self, dsn, geo_enabled = False):
         self._dsn = dsn
@@ -102,14 +133,11 @@ class Connection(object):
         self._key = 0
         if geo_enabled:
             self._register()
-    
-    def __del__(self):
-        self.close()
-    
+
     @classmethod
     def connection(cls, geo_enabled = True):
         return cls(dsn(), geo_enabled)
-        
+
     def close(self):
         try:
             self._conn.close()
@@ -119,7 +147,7 @@ class Connection(object):
     def reconnect(self):
         self.close()
         self._conn = connect(self._dsn)
-    
+
 #    def __del__(self):
 #        self.close()
 

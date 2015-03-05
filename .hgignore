@@ -22,3 +22,5 @@ syntax: regexp
 ^src/connection\.egg-info$
 syntax: regexp
 ^src/connection/config/pakhuis\.ini$
+syntax: regexp
+^src/connection/config/varioscale\.ini$
