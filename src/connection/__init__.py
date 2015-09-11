@@ -6,7 +6,7 @@ __license__ = "MIT License"
 # created: 26 jun 2012, MM
 
 import logging
-log = logging.getLogger(__name__)
+# log = logging.getLogger(__name__)
 
 import os
 from ConfigParser import ConfigParser, NoOptionError
@@ -163,7 +163,7 @@ class Connection(object):
         cursor.execute("SELECT NULL::geometry")
         geom_oid = cursor.description[0][1]
         cursor.close()
-        log.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
+        logging.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
         GEOMETRY = psycopg2.extensions.new_type((geom_oid, ), "GEOMETRY", loads)
         psycopg2.extensions.register_type(GEOMETRY)
 
@@ -178,7 +178,7 @@ class Connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
-        log.debug(sql)
+        logging.debug(sql)
         rows = cursor.fetchall()
         cursor.close()
 #        self._conn.commit()
@@ -202,7 +202,7 @@ class Connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
-        log.debug(sql)
+        logging.debug(sql)
         while True:
             rows = cursor.fetchmany(size)
             if not rows:
@@ -229,7 +229,7 @@ class Connection(object):
         except:
             print sql
             raise
-        log.debug(sql)
+        logging.debug(sql)
         one = cursor.fetchone()
         cursor.close()
 #        self._conn.commit()
@@ -245,7 +245,7 @@ class Connection(object):
         self._conn.set_isolation_level(isolation_level)
         cursor = self._conn.cursor()
         try:
-            log.debug(sql)
+            logging.debug(sql)
             if parameters:
                 cursor.execute(sql, parameters)
             else:
