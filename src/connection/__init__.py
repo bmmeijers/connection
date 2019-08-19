@@ -16,7 +16,7 @@ import warnings
 
 
 
-def auth_params():
+def create_auth_params():
     config = os.environ.get('DBCONFIG', 'default')
 #     logging.debug("DBCONFIG: {0}".format(config))
     path = os.path.dirname(__file__)
@@ -56,7 +56,7 @@ def auth_params():
 
 
 # dsn.intStaticDisplayConnectionInfo = 0
-def dsn():
+def create_dsn():
     # PostgreSQL has the following parameters for connections:
     # dbname - the database name (only in dsn string)
     # database - the database name (only as keyword argument)
@@ -65,7 +65,7 @@ def dsn():
     # host - database host address (defaults to UNIX socket if not provided)
     # port - connection port number (defaults to 5432 if not provided)
     # sslmode - SSL TCP/IP negotiation mode
-    auth = auth_params()
+    auth = create_auth_params()
     dsn = "host={0} dbname={1} user={2} password={3} port={4} sslmode={5}"
     
 #     if intStaticDisplayConnectionInfo != 0: #display the following information only once
@@ -95,7 +95,7 @@ class ConnectionFactory(object):
     @classmethod
     def connection(cls, geo_enabled = True):
         warnings.warn("deprecated, will be removed in the future. use Connection class instead", DeprecationWarning)
-        return Connection(dsn(), geo_enabled)
+        return Connection(create_dsn(), geo_enabled)
 
 def connection(geo_enabled = False):
     """
@@ -110,18 +110,18 @@ def connection(geo_enabled = False):
     return Connection.connection(geo_enabled)
 
 
-def open_db(geo_enabled = True):
-    """
-    Factory method for new connection manager for use in with statement
-    
-    This is the preferred way of making new connections:
-    
-    >>> from connection import db
-    >>> with open_db() as db:
-    ...     db.execute("select 1")
-    
-    """
-    return ConnectionManager(geo_enabled)
+# def open_db(geo_enabled = True):
+#     """
+#     Factory method for new connection manager for use in with statement
+#     
+#     This is the preferred way of making new connections:
+#     
+#     >>> from connection import db
+#     >>> with open_db() as db:
+#     ...     db.execute("select 1")
+#     
+#     """
+#     return ConnectionManager(geo_enabled)
 
 
 class ConnectionManager(object):
@@ -150,7 +150,7 @@ class Connection(object):
 
     @classmethod
     def connection(cls, geo_enabled = True):
-        return cls(dsn(), geo_enabled)
+        return cls(create_dsn(), geo_enabled)
 
     def close(self):
         try:
