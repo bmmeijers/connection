@@ -14,15 +14,17 @@ from psycopg2 import connect
 import psycopg2
 import warnings
 
+
+
 def auth_params():
     config = os.environ.get('DBCONFIG', 'default')
-    logging.debug("DBCONFIG: {0}".format(config))
+#     logging.debug("DBCONFIG: {0}".format(config))
     path = os.path.dirname(__file__)
     file_nm = os.path.join(path, 
         os.path.join(
             os.path.join("config","{0}.ini".format(config))))
-    logging.debug("DBCONFIG from file: {0}".format(file_nm))
-    
+#     logging.debug("DBCONFIG from file: {0}".format(file_nm))
+
     # FIXME:
     # would it not be better to put config file in users home dir?
     #http://stackoverflow.com/questions/7567642/where-to-put-a-configuration-file-in-python
@@ -36,7 +38,7 @@ def auth_params():
     configparser = ConfigParser()
     configparser.read(file_nm)
     try:
-        sslmode = configparser.get('database', 'sslmode')
+        sslmode = configparser.get('database', 'sslmode')        
     except NoOptionError:
         sslmode = "prefer"
     auth = {
@@ -48,6 +50,12 @@ def auth_params():
         "sslmode": sslmode,}
     return auth
 
+
+
+
+
+
+# dsn.intStaticDisplayConnectionInfo = 0
 def dsn():
     # PostgreSQL has the following parameters for connections:
     # dbname - the database name (only in dsn string)
@@ -59,20 +67,26 @@ def dsn():
     # sslmode - SSL TCP/IP negotiation mode
     auth = auth_params()
     dsn = "host={0} dbname={1} user={2} password={3} port={4} sslmode={5}"
-    logging.debug("Connection for: {0}".format(
-        dsn.format(
-            auth['database'],
-            auth['username'],
-            '********', # hide password
-            auth['host'],
-            auth['port'],
-            auth['sslmode'],)))
-    return dsn.format(auth['host'],
+    
+#     if intStaticDisplayConnectionInfo != 0: #display the following information only once
+#         logging.debug("connection.py, dsh(), Connection for: {0}".format(
+#             dsn.format(
+#                 auth['host'],
+#                 auth['database'],
+#                 auth['username'],
+#                 '********', # hide password
+#                 auth['port'],
+#                 auth['sslmode'],)))
+#         dsn.intStaticDisplayConnectionInfo += 1
+    
+    return dsn.format(
+        auth['host'],
         auth['database'],
         auth['username'],
         auth['password'],
         auth['port'],
         auth['sslmode'],)
+    
 
 
 class ConnectionFactory(object):
@@ -163,7 +177,7 @@ class Connection(object):
         cursor.execute("SELECT NULL::geometry")
         geom_oid = cursor.description[0][1]
         cursor.close()
-        logging.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
+#         logging.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
         GEOMETRY = psycopg2.extensions.new_type((geom_oid, ), "GEOMETRY", loads)
         psycopg2.extensions.register_type(GEOMETRY)
 
@@ -178,7 +192,7 @@ class Connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
-        logging.debug(sql)
+#         logging.debug(sql)
         rows = cursor.fetchall()
         cursor.close()
 #        self._conn.commit()
@@ -202,7 +216,7 @@ class Connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
-        logging.debug(sql)
+#         logging.debug(sql)
         while True:
             rows = cursor.fetchmany(size)
             if not rows:
@@ -229,7 +243,7 @@ class Connection(object):
         except:
             print sql
             raise
-        logging.debug(sql)
+#         logging.debug(sql)
         one = cursor.fetchone()
         cursor.close()
 #        self._conn.commit()
@@ -242,16 +256,19 @@ class Connection(object):
         # opening database connections
         #
         # might not be very efficient, but leads to a bit more readable code
+#         print("connection.py, execute")
         self._conn.set_isolation_level(isolation_level)
         cursor = self._conn.cursor()
+        
         try:
-            logging.debug(sql)
+#             logging.debug(sql) 
             if parameters:
                 cursor.execute(sql, parameters)
             else:
                 cursor.execute(sql)
         except:
             raise
+#         print("connection.py, execute3")
         cursor.close()
         self._conn.commit()
         self._conn.set_isolation_level(1)
