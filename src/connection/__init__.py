@@ -65,6 +65,7 @@ def create_dsn():
     # host - database host address (defaults to UNIX socket if not provided)
     # port - connection port number (defaults to 5432 if not provided)
     # sslmode - SSL TCP/IP negotiation mode
+    
     auth = create_auth_params()
     dsn = "host={0} dbname={1} user={2} password={3} port={4} sslmode={5}"
     
@@ -78,7 +79,6 @@ def create_dsn():
 #                 auth['port'],
 #                 auth['sslmode'],)))
 #         dsn.intStaticDisplayConnectionInfo += 1
-    
     return dsn.format(
         auth['host'],
         auth['database'],
@@ -146,7 +146,14 @@ class Connection(object):
         self._conn = connect(dsn)
         self._key = 0
         if geo_enabled:
-            self._register()
+            self._register()   
+
+#     def __enter__(self):
+#         return self
+# 
+#     def __exit__(self, type, value, traceback):
+# #         self.db.close()
+#         pass
 
     @classmethod
     def connection(cls, geo_enabled = True):
