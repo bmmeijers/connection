@@ -7,8 +7,11 @@ logging.basicConfig(
 
 from connection import connection
 
-conn = connection()
-
-sql = "SELECT postgis_full_version()"
-for item, in conn.recordset(sql): 
-    print item
+with connection() as db:
+    sql = "SELECT version()"
+    for item, in db.recordset(sql): 
+        print item
+    
+    sql = "SELECT postgis_full_version()"
+    for item, in db.recordset(sql): 
+        print item

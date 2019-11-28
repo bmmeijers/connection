@@ -1,10 +1,4 @@
 """Helper module for setting up a Database connection to PostgreSQL"""
-
-__version__ = '2.0.4.dev0'
-__author__ = "Martijn Meijers"
-__license__ = "MIT License"
-# created: 26 jun 2012, MM
-
 import logging
 # log = logging.getLogger(__name__)
 
@@ -14,39 +8,41 @@ from psycopg2 import connect
 import psycopg2
 import warnings
 
+__version__ = '2.0.4.dev0'
+__author__ = "Martijn Meijers"
+__license__ = "MIT License"
+# created: 26 jun 2012, MM
+
+
 def auth_params():
     config = os.environ.get('DBCONFIG', 'default')
     logging.debug("DBCONFIG: {0}".format(config))
     path = os.path.dirname(__file__)
-    file_nm = os.path.join(path, 
-        os.path.join(
-            os.path.join("config","{0}.ini".format(config))))
+    file_nm = os.path.join(path,
+                           os.path.join(
+                                        os.path.join("config", "{0}.ini"
+                                                     .format(config))))
     logging.debug("DBCONFIG from file: {0}".format(file_nm))
-    
     # FIXME:
     # would it not be better to put config file in users home dir?
-    #http://stackoverflow.com/questions/7567642/where-to-put-a-configuration-file-in-python
+    # http://stackoverflow.com/questions/7567642/where-to-put-a-configuration-file-in-python
     # config= None
     # for loc in os.curdir, os.path.expanduser("~"), "/etc/myproject", os.environ.get("MYPROJECT_CONF"):
-    #     try: 
+    #     try:
     #         with open(os.path.join(loc,"myproject.conf")) as source:
     #             config.readfp( source )
     #     except IOError:
     #         pass
     configparser = ConfigParser()
     configparser.read(file_nm)
-    try:
-        sslmode = configparser.get('database', 'sslmode')
-    except NoOptionError:
-        sslmode = "prefer"
-    auth = {
-        "database": configparser.get('database', 'database'),
-        "username": configparser.get('database', 'username'),
-        "password": configparser.get('database', 'password'),
-        "host": configparser.get('database', 'host'),
-        "port": configparser.get('database', 'port'),
-        "sslmode": sslmode,}
+    auth = {}
+    for key in ('host', 'database', 'username', 'password', 'port', 'sslmode'):
+        try:
+            auth[key] = configparser.get('database', key)
+        except NoOptionError:
+            auth[key] = ""
     return auth
+
 
 def dsn():
     # PostgreSQL has the following parameters for connections:
@@ -58,85 +54,42 @@ def dsn():
     # port - connection port number (defaults to 5432 if not provided)
     # sslmode - SSL TCP/IP negotiation mode
     auth = auth_params()
-    dsn = "host={0} dbname={1} user={2} password={3} port={4} sslmode={5}"
-    logging.debug("Connection for: {0}".format(
-        dsn.format(
-            auth['database'],
-            auth['username'],
-            '********', # hide password
-            auth['host'],
-            auth['port'],
-            auth['sslmode'],)))
-    return dsn.format(auth['host'],
-        auth['database'],
-        auth['username'],
-        auth['password'],
-        auth['port'],
-        auth['sslmode'],)
+    dsn = []
+    pg = {'database': 'dbname',
+          'host': 'host',
+          'username': 'user',
+          'password': 'password',
+          'port': 'port',
+          'sslmode': 'sslmode'
+          }
+    for key in ('host', 'database', 'username', 'password', 'port', 'sslmode'):
+        if auth[key] != "":
+            dsn.append("{0}={1}".format(pg[key], auth[key]))
+    dsn = " ".join(dsn)
+    logging.debug("DSN: '{}'".format(dsn))
+    return dsn
 
 
-class ConnectionFactory(object):
-    def __init__(self):
-        pass
-    @classmethod
-    def connection(cls, geo_enabled = True):
-        warnings.warn("deprecated, will be removed in the future. use Connection class instead", DeprecationWarning)
-        return Connection(dsn(), geo_enabled)
-
-def connection(geo_enabled = False):
+class connection(object):
+    """A class that reduces the amount of boilerplate code to write
+    for getting database connections, cursors and the like
     """
-    Factory method for new connections
-    
-    This is the preferred way of making new connections:
-    
-    >>> from connection import connection
-    >>> conn = connection(geo_enabled = True)
-    
-    """
-    return Connection.connection(geo_enabled)
-
-
-def open_db(geo_enabled = True):
-    """
-    Factory method for new connection manager for use in with statement
-    
-    This is the preferred way of making new connections:
-    
-    >>> from connection import db
-    >>> with open_db() as db:
-    ...     db.execute("select 1")
-    
-    """
-    return ConnectionManager(geo_enabled)
-
-
-class ConnectionManager(object):
-    ''' Context manager for Postgres connections.
-    See http://www.python.org/dev/peps/pep-0343/
-    and http://effbot.org/zone/python-with-statement.htm
-    '''
     def __init__(self, geo_enabled=True):
-        self.geo_enabled = geo_enabled
-
-    def __enter__(self):
-        self.db = Connection.connection(self.geo_enabled)
-        return self.db
-
-    def __exit__(self, type, value, traceback):
-        self.db.close()
-
-
-class Connection(object):
-    def __init__(self, dsn, geo_enabled = False):
-        self._dsn = dsn
-        self._conn = connect(dsn)
+        self._dsn = dsn()
+        self._conn = connect(self._dsn)
         self._key = 0
         if geo_enabled:
             self._register()
 
-    @classmethod
-    def connection(cls, geo_enabled = True):
-        return cls(dsn(), geo_enabled)
+#     @classmethod
+#     def connection(cls, geo_enabled=True):
+#         return cls(dsn(), geo_enabled)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, tp, value, traceback):
+        self.close()
 
     def close(self):
         try:
@@ -145,16 +98,13 @@ class Connection(object):
             pass
 
     def reconnect(self):
+        """Close the current connection and open it again"""
         self.close()
         self._conn = connect(self._dsn)
-
-#    def __del__(self):
-#        self.close()
 
     def _register(self):
         """Find the correct OID and register the input/output function
          as psycopg2 extension type for automatic type conversion to happen.
-        
         .. note::
             Should be called *only* once
         """
@@ -167,12 +117,13 @@ class Connection(object):
         GEOMETRY = psycopg2.extensions.new_type((geom_oid, ), "GEOMETRY", loads)
         psycopg2.extensions.register_type(GEOMETRY)
 
-    def recordset(self, sql, parameters = None):
-        # takes care of having to write boiler plate code for cursors and
-        # opening database connections
-        #
-        # might not be very efficient, but leads to a bit more readable code
-#        self._conn.set_isolation_level(1)
+    def recordset(self, sql, parameters=None):
+        """Get a record set in one go (as list of tuples)
+
+        >>> with connection() as db:
+        ...     for item in db.recordset('select * from table'):
+        ...        print item
+        """
         cursor = self._conn.cursor()
         if parameters:
             cursor.execute(sql, parameters)
@@ -181,19 +132,17 @@ class Connection(object):
         logging.debug(sql)
         rows = cursor.fetchall()
         cursor.close()
-#        self._conn.commit()
         del cursor
         return rows
-    
-    def irecordset(self, sql, parameters = None, size = 2500):
-        # takes care of having to write boiler plate code for cursors and
-        # opening database connections
-        #
-        # might not be very efficient, but leads to a bit more readable code
-        #
-        # NOTE: do not nest irecordset calls inside loops, otherwise
-        # things *will* go wrong. If needed, use multiple connection objects
-        #
+
+    def irecordset(self, sql, parameters=None, size=2500):
+        """Get a record set as generator, this makes it possible to iterate
+        over the record set, while not loading the full set in main memory
+
+        >>> with connection() as db:
+        ...     for item in db.irecordset('select * from large_table'):
+        ...        print item
+        """
         self._key += 1
         self._conn.set_isolation_level(1)
         name = 'named_cursor__{1}_{0}'.format(self._key, os.getpid())
@@ -213,13 +162,9 @@ class Connection(object):
         self._conn.commit()
         del rows
         del cursor
-    
-    def record(self, sql, parameters = None):
-        # takes care of having to write boiler plate code for cursors and
-        # opening database connections
-        #
-        # might not be very efficient, but leads to a bit more readable code
-#        self._conn.set_isolation_level(1)
+
+    def record(self, sql, parameters=None):
+        """Get one record from the database"""
         cursor = self._conn.cursor()
         try:
             if parameters:
@@ -232,16 +177,11 @@ class Connection(object):
         logging.debug(sql)
         one = cursor.fetchone()
         cursor.close()
-#        self._conn.commit()
-    #    CONN.commit()
         del cursor
         return one
-    
-    def execute(self, sql, parameters = None, isolation_level = 1):
-        # takes care of having to write boiler plate code for cursors and
-        # opening database connections
-        #
-        # might not be very efficient, but leads to a bit more readable code
+
+    def execute(self, sql, parameters=None, isolation_level=1):
+        """Execute one or multiple SQL statement(s)"""
         self._conn.set_isolation_level(isolation_level)
         cursor = self._conn.cursor()
         try:
@@ -257,12 +197,15 @@ class Connection(object):
         self._conn.set_isolation_level(1)
         del cursor
 
-
-    def copy_from(self, file_nm, table, sep="\t", null="\\N", size=8192, columns=None):
+    def copy_from(self, file_nm, table, sep="\t", null="\\N",
+                  size=8192, columns=None):
+        """Use COPY to load data into the database
+        (more efficient than individual inserts)
+        """
         cursor = self._conn.cursor()
         try:
             if columns:
-                cursor.copy_from(file_nm, table, sep, null, size, columns=columns)
+                cursor.copy_from(file_nm, table, sep, null, size, columns)
             else:
                 cursor.copy_from(file_nm, table, sep, null, size)
         except:
