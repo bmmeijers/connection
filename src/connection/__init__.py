@@ -3,7 +3,11 @@ import logging
 # log = logging.getLogger(__name__)
 
 import os
-from ConfigParser import ConfigParser, NoOptionError
+try:
+    from ConfigParser import ConfigParser, NoOptionError
+except ImportError:
+    from configparser import ConfigParser, NoOptionError #py3k
+
 from psycopg2 import connect
 import psycopg2
 import warnings
@@ -16,13 +20,14 @@ __license__ = "MIT License"
 
 def auth_params():
     config = os.environ.get('DBCONFIG', 'default')
-#     logging.debug("DBCONFIG: {0}".format(config))
+    #FIXME: should we use https://github.com/ActiveState/appdirs ???
+    logging.debug("DBCONFIG: {0}".format(config))
     path = os.path.dirname(__file__)
     file_nm = os.path.join(path,
                            os.path.join(
                                         os.path.join("config", "{0}.ini"
                                                      .format(config))))
-#     logging.debug("DBCONFIG from file: {0}".format(file_nm))
+    logging.debug("DBCONFIG from file: {0}".format(file_nm))
     # FIXME:
     # would it not be better to put config file in users home dir?
     # http://stackoverflow.com/questions/7567642/where-to-put-a-configuration-file-in-python
@@ -66,7 +71,7 @@ def dsn():
         if auth[key] != "":
             dsn.append("{0}={1}".format(pg[key], auth[key]))
     dsn = " ".join(dsn)
-#     logging.debug("DSN: '{}'".format(dsn))
+    logging.debug("DSN: '{}'".format(dsn))
     return dsn
 
 
@@ -74,7 +79,7 @@ class connection(object):
     """A class that reduces the amount of boilerplate code to write
     for getting database connections, cursors and the like
     """
-    def __init__(self, geo_enabled=True):
+    def __init__(self, geo_enabled=False):
         self._dsn = dsn()
         self._conn = connect(self._dsn)
         self._key = 0
@@ -113,7 +118,7 @@ class connection(object):
         cursor.execute("SELECT NULL::geometry")
         geom_oid = cursor.description[0][1]
         cursor.close()
-#         logging.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
+        logging.debug("Registering Geometry Type (OID {0}) for PostGIS".format(geom_oid))
         GEOMETRY = psycopg2.extensions.new_type((geom_oid, ), "GEOMETRY", loads)
         psycopg2.extensions.register_type(GEOMETRY)
 
@@ -129,7 +134,7 @@ class connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
-#         logging.debug(sql)
+        logging.debug(sql)
         rows = cursor.fetchall()
         cursor.close()
         del cursor
@@ -151,7 +156,7 @@ class connection(object):
             cursor.execute(sql, parameters)
         else:
             cursor.execute(sql)
-#         logging.debug(sql)
+        logging.debug(sql)
         while True:
             rows = cursor.fetchmany(size)
             if not rows:
@@ -172,9 +177,9 @@ class connection(object):
             else:
                 cursor.execute(sql)
         except:
-            print sql
+            print(sql)
             raise
-#         logging.debug(sql)
+        logging.debug(sql)
         one = cursor.fetchone()
         cursor.close()
         del cursor
@@ -185,7 +190,7 @@ class connection(object):
         self._conn.set_isolation_level(isolation_level)
         cursor = self._conn.cursor()
         try:
-#             logging.debug(sql)
+            logging.debug(sql)
             if parameters:
                 cursor.execute(sql, parameters)
             else:

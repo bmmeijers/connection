@@ -1,7 +1,22 @@
-import ez_setup
-ez_setup.use_setuptools()
+#import ez_setup
+#ez_setup.use_setuptools()
+#from setuptools import setup, find_packages, Extension
+#import os
+#import sys
+#try:
+#    from Cython.Build import cythonize
+#    cython_available = True
+#except ImportError:
+#    cython_available = False
+
 from setuptools import setup, find_packages, Extension
 import os
+import sys
+try:
+    from Cython.Build import cythonize
+    cython_available = True
+except ImportError:
+    cython_available = False
 
 def get_version():
     """
@@ -26,14 +41,15 @@ def get_version():
     return version
 
 PACKAGES = find_packages('src')
-EXT_MODULES = []
+if cython_available:
+    EXT_MODULES = cythonize([])
+else:
+    sys.stderr.write("Cython NOT available, building from .C sources\n")
+    EXT_MODULES = [ ]
+
 SCRIPTS = [] 
-REQUIREMENTS = ["psycopg2",]
-DATA_FILES = [
-    ("connection/config", # folder where to install
-     ["src/connection/config/default.ini", ] # which files to install there
-     ),
-]
+REQUIREMENTS = []
+DATA_FILES = []
 
 setup(
     name = "connection",
@@ -42,8 +58,8 @@ setup(
     package_dir = {"": "src"},
     author = "Martijn Meijers",
     author_email = "b.m.meijers@tudelft.nl",
-    description = "Small helper class for setting up a database connection to PostgreSQL",
-    url = "https://bitbucket.org/bmmeijers/connection/",
+    description = "",
+    #url = "https://bitbucket.org/bmmeijers/connection/",
     license = "MIT license",
     ext_modules = EXT_MODULES,
     data_files = DATA_FILES,
@@ -51,7 +67,7 @@ setup(
     scripts = SCRIPTS,
     install_requires = REQUIREMENTS,
     classifiers = [
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "License :: OSI Approved :: MIT License",

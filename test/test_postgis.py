@@ -10,8 +10,8 @@ from connection import connection
 with connection() as db:
     sql = "SELECT version()"
     for item, in db.recordset(sql): 
-        print item
+        print(item)
     
     sql = "SELECT postgis_full_version()"
     for item, in db.recordset(sql): 
-        print item
+        print(item)
